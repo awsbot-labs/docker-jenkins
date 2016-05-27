@@ -1,0 +1,38 @@
+#!/bin/bash
+set -e
+
+function abort()
+{
+	echo "$@"
+	exit 1
+}
+
+function cleanup()
+{
+	echo " --> Stopping container"
+	docker stop $ID >/dev/null
+	docker rm $ID >/dev/null
+}
+
+PWD=`pwd`
+
+echo " --> Starting container"
+ID=`docker run -d $NAME:$VERSION`
+sleep 1
+
+trap cleanup EXIT
+
+echo " --> Testing for applications"
+echo " --> awscli OK"
+docker exec -t -i $ID aws --version > /dev/null
+echo " --> terraform OK"
+docker exec -t -i $ID terraform -v > /dev/null
+echo " --> docker OK"
+docker exec -t -i $ID docker -v > /dev/null
+echo " --> docker-compose OK"
+docker exec -t -i $ID docker-compose -v > /dev/null
+echo " --> docker-machine OK"
+docker exec -t -i $ID docker-machine -v > /dev/null
+echo " --> make OK"
+docker exec -t -i $ID make -v > /dev/null
+
